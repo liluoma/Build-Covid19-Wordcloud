@@ -1,0 +1,48 @@
+import pandas as pd
+import urllib
+import urllib.request
+import urllib.parse
+from bs4 import BeautifulSoup
+import requests
+import matplotlib.pyplot as plt
+%pylab inline
+import jieba
+import matplotlib.animation as animation
+from IPython.display import HTML
+
+df=pd.read_csv('DXYNews.csv')  
+
+df['pubDate']=pd.to_datetime(df['pubDate'])
+df['pubmonth'] = pd.DatetimeIndex(df['pubDate']).month
+
+fig, ax = plt.subplots(figsize=(15, 30))
+def draw_wordcloud(month):
+    year = (2019 if month==12 else 2020)
+    dff = (df[df['pubmonth']==month])
+    text = ''.join(dff['title'])+''.join(dff['summary'])
+    mytext = " ".join(jieba.cut(text))
+    ax.clear()
+    wc = WordCloud(font_path='chinese.simfang.ttf', width=600, height=400, background_color="white", max_words=4000)
+    wc.generate(mytext)
+    #添加月份
+    ax.text(0, 1.05, str(year)+'年 '+str(month)+'月', transform=ax.transAxes, color='#777777', size=22, ha='left', weight=400)
+    ax.text(0, 1.12, '2019年12月至2020年5月有关新冠疫情新闻报道关键词',
+            transform=ax.transAxes, size=24, weight=600, ha='left')
+    ax.margins(0, 0.01)
+    ax.imshow(wc)
+    plt.axis("off") # 取消坐标系
+    plt.rcParams['font.sans-serif']=['SimHei']
+    plt.rcParams['axes.unicode_minus'] = False
+    plt.axis('off')
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.set_yticks([])
+    ax.set_xticks([])
+
+    plt.show()      # 在IDE中显示图片
+fig, ax = plt.subplots(figsize=(15, 30))
+animator = animation.FuncAnimation(fig, draw_wordcloud, frames=[12,1,2,3,4,5],interval=200, repeat_delay=1000)
+HTML(animator.to_jshtml()) 
+animator.save('animation.gif', writer='pillow', fps=0.5, dpi=1000)
